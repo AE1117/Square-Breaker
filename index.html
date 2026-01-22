@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQUARE BREAKER - Ana Menü</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --accent: #00f2ff;
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Inter', system-ui, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            text-align: center;
+            background: var(--glass);
+            padding: 60px 40px;
+            border-radius: 40px;
+            border: 1px solid #222;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            width: 350px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            font-size: 3rem;
+            margin: 0;
+            font-weight: 900;
+            letter-spacing: -2px;
+            background: linear-gradient(to bottom, #fff, #666);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        p {
+            color: #444;
+            margin-bottom: 50px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .menu-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .btn {
+            padding: 18px;
+            border-radius: 50px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: block;
+        }
+        .btn-play {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 10px 20px rgba(255,255,255,0.1);
+        }
+        .btn-play:hover {
+            transform: scale(1.05) translateY(-5px);
+            background: var(--accent);
+            box-shadow: 0 15px 30px rgba(0, 242, 255, 0.3);
+        }
+        .btn-settings {
+            background: #111;
+            color: #888;
+            border: 1px solid #222;
+        }
+        .btn-settings:hover {
+            color: #fff;
+            border-color: #444;
+            background: #161616;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SQUARE BREAKER</h1>
+        <p>Prosedürel Dünya Motoru</p>
+
+        <div class="menu-btns">
+            <a href="/game" class="btn btn-play">OYUNA BAŞLA</a>
+            <a href="/settings" class="btn btn-settings">AYARLAR</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Square Breaker - Flask Dynamic Engine</title>
+    <style>
+        :root {
+            --bg-dark: #050505;
+            --accent: #00f2ff;
+            --text-main: #ffffff;
+            --overlay-bg: rgba(0, 0, 0, 0.95);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0f0f0f;
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            touch-action: none;
+        }
+
+        #game-wrapper {
+            position: relative;
+            width: 450px;
+            height: 800px;
+            border: 4px solid #2a2a2a;
+            border-radius: 24px;
+            background: #000;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            display: block;
+            background-color: #000;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui {
+            position: absolute;
+            top: 25px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 20;
+            font-weight: 900;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 10px #000;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: var(--overlay-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            text-align: center;
+            padding: 30px;
+            backdrop-filter: blur(8px);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin: 0;
+            background: linear-gradient(to bottom, #fff, #555);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 16px 45px;
+            font-size: 1rem;
+            font-weight: bold;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 80%;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            background: var(--accent);
+        }
+
+        /* Ana Menü Butonu Stili */
+        .btn-home {
+            background: #1a1a1a;
+            color: #fff;
+            border: 1px solid #333;
+            margin-top: 10px;
+        }
+
+        .btn-home:hover {
+            background: #333;
+            border-color: #fff;
+        }
+
+        .hidden { display: none !important; }
+
+        #error-msg {
+            color: #ff4d4d;
+            font-size: 0.85rem;
+            margin-top: 20px;
+            padding: 12px;
+            background: rgba(255, 77, 77, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 77, 77, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-wrapper">
+        <canvas id="gameCanvas" width="450" height="800"></canvas>
+
+        <div id="ui">
+            <div>SKOR: <span id="score">0</span></div>
+            <div>DÜNYA: <span id="level-display">1</span></div>
+        </div>
+
+        <!-- Başlangıç Ekranı -->
+        <div id="start-screen" class="overlay">
+            <h1>SQUARE BREAKER</h1>
+            <p style="color: #888; margin-top: 8px;">Dinamik Python Motoru v2.0</p>
+            <button onclick="fetchWorld(true)">DÜNYAYI İNŞA ET</button>
+            <button class="btn-home" onclick="location.href='/'">ANA MENÜ</button>
+            <div id="error-msg" class="hidden">
+                Bağlantı Hatası!<br>
+                Flask sunucusu <b>http://127.0.0.1:5000</b> adresinde açık mı?
+            </div>
+        </div>
+
+        <!-- Oyun Bitti Ekranı -->
+        <div id="game-over-screen" class="overlay hidden">
+            <h1 style="color: #ff4d4d; background: none; -webkit-text-fill-color: #ff4d4d;">OYUN BİTTİ</h1>
+            <p id="final-score" style="margin-top: 15px; font-weight: bold; font-size: 1.2rem;"></p>
+            <button onclick="fetchWorld(true)">YENİDEN DENE</button>
+            <button class="btn-home" onclick="location.href='/'">ANA MENÜ</button>
+        </div>
+
+        <!-- Kazanma Ekranı -->
+        <div id="win-screen" class="overlay hidden">
+            <h1 style="color: #4ade80; background: none; -webkit-text-fill-color: #4ade80;">HARİKA!</h1>
+            <p>Seviye başarıyla temizlendi.</p>
+            <button onclick="fetchWorld(false)">SIRADAKİ DÜNYA</button>
+            <button class="btn-home" onclick="location.href='/'">ANA MENÜ</button>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const wrapper = document.getElementById('game-wrapper');
+
+    let state = {
+        score: 0,
+        level: 1,
+        status: 'START',
+        paddle: {
+            w: 100,
+            h: 14,
+            x: 175,
+            y: 720,
+            targetX: 175,
+            color: '#fff'
+        },
+        balls: [],
+        bricks: [],
+        powerUps: [],
+        config: {
+            ball_speed: 6,
+            drop_chance: 1.0
+        }
+    };
+
+    /**
+     * Python API'den verileri çeker ve oyunu kurar
+     */
+    async function fetchWorld(isFullReset) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const isContinue = urlParams.get('mode') === 'continue';
+
+
+        if(isFullReset && !isContinue) {
+            state.score = 0;
+            state.level = 1;
+            await fetch('/reset_progress', { method: 'POST' });
+        }
+
+        const errorEl = document.getElementById('error-msg');
+        errorEl.classList.add('hidden');
+
+        try {
+
+            if (isContinue && state.status === 'START') {
+                const settingsRes = await fetch('/get_settings');
+                const settingsData = await settingsRes.json();
+                state.level = settingsData.current_level;
+                state.score = settingsData.current_score;
+
+                window.history.replaceState({}, document.title, "/game");
+            }
+
+            const res = await fetch(`/get_world_config/${state.level}`);
+            if (!res.ok) throw new Error("API Hatası");
+            const data = await res.json();
+
+            state.config = data.config;
+            canvas.width = state.config.canvas_width;
+            canvas.height = state.config.canvas_height;
+            wrapper.style.width = canvas.width + 'px';
+            wrapper.style.height = canvas.height + 'px';
+
+            state.paddle.y = state.config.paddle_y;
+            state.paddle.x = (canvas.width - state.paddle.w) / 2;
+            state.paddle.targetX = state.paddle.x;
+
+            state.bricks = data.bricks;
+            state.balls = [createNewBall(canvas.width / 2, state.paddle.y - 20)];
+            state.powerUps = [];
+            state.status = 'PLAYING';
+
+            document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
+            document.getElementById('level-display').innerText = state.level;
+            document.getElementById('score').innerText = state.score;
+        } catch (e) {
+            console.error("Bağlantı Hatası:", e);
+            errorEl.classList.remove('hidden');
+        }
+    }
+
+
+    async function saveProgress() {
+        await fetch('/save_progress', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ level: state.level, score: state.score })
+        });
+    }
+
+    function createNewBall(x, y, dx, dy) {
+        const speed = state.config.ball_speed || 6;
+        return {
+            x: x,
+            y: y,
+            r: 4.5,
+            dx: dx || (Math.random() - 0.5) * speed * 1.4,
+            dy: dy || -speed
+        };
+    }
+
+    const handleInput = (clientX) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        state.paddle.targetX = (clientX - rect.left) * scaleX - state.paddle.w / 2;
+    };
+
+    window.addEventListener('mousemove', e => handleInput(e.clientX));
+    window.addEventListener('touchmove', e => {
+        e.preventDefault();
+        handleInput(e.touches[0].clientX);
+    }, { passive: false });
+
+    function update() {
+        if(state.status !== 'PLAYING') return;
+
+        state.paddle.x += (state.paddle.targetX - state.paddle.x) * 0.25;
+        state.paddle.x = Math.max(0, Math.min(canvas.width - state.paddle.w, state.paddle.x));
+
+        for (let i = state.balls.length - 1; i >= 0; i--) {
+            let b = state.balls[i];
+            b.x += b.dx;
+            b.y += b.dy;
+
+            if(b.x < b.r || b.x > canvas.width - b.r) {
+                b.dx *= -1;
+                b.x = b.x < b.r ? b.r : canvas.width - b.r;
+            }
+            if(b.y < b.r) {
+                b.dy *= -1;
+                b.y = b.r;
+            }
+
+            if(b.dy > 0 && b.y + b.r > state.paddle.y && b.y - b.r < state.paddle.y + state.paddle.h) {
+                if(b.x > state.paddle.x && b.x < state.paddle.x + state.paddle.w) {
+                    let impact = (b.x - (state.paddle.x + state.paddle.w/2)) / (state.paddle.w/2);
+                    b.dy = -Math.abs(b.dy);
+                    b.dx = impact * (state.config.ball_speed + 2);
+                    b.y = state.paddle.y - b.r;
+                }
+            }
+
+            for(let brick of state.bricks) {
+                if(brick.status === 1) {
+                    if(b.x + b.r > brick.x && b.x - b.r < brick.x + brick.w &&
+                       b.y + b.r > brick.y && b.y - b.r < brick.y + brick.h) {
+
+                        brick.status = 0;
+                        b.dy *= -1;
+                        state.score += 10;
+
+                        if(Math.random() < state.config.drop_chance) {
+                            state.powerUps.push({
+                                x: brick.x + brick.w / 2,
+                                y: brick.y + brick.h / 2,
+                                dy: 3.8
+                            });
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if(b.y - b.r > canvas.height) {
+                state.balls.splice(i, 1);
+            }
+        }
+
+        for (let i = state.powerUps.length - 1; i >= 0; i--) {
+            let p = state.powerUps[i];
+            p.y += p.dy;
+
+            if(p.y > state.paddle.y && p.y < state.paddle.y + state.paddle.h &&
+               p.x > state.paddle.x && p.x < state.paddle.x + state.paddle.w) {
+
+                const originalBalls = [...state.balls];
+                if(originalBalls.length > 0) {
+                    originalBalls.forEach(ob => {
+                        state.balls.push(createNewBall(ob.x, ob.y, ob.dx + 2, -ob.dy));
+                        state.balls.push(createNewBall(ob.x, ob.y, ob.dx - 2, -ob.dy));
+                    });
+                } else {
+                    state.balls.push(createNewBall(state.paddle.x + state.paddle.w/2, state.paddle.y - 10, 3, -6));
+                    state.balls.push(createNewBall(state.paddle.x + state.paddle.w/2, state.paddle.y - 10, -3, -6));
+                    state.balls.push(createNewBall(state.paddle.x + state.paddle.w/2, state.paddle.y - 10, 0, -7));
+                }
+                state.powerUps.splice(i, 1);
+            } else if(p.y > canvas.height) {
+                state.powerUps.splice(i, 1);
+            }
+        }
+
+        if(state.status === 'PLAYING' && state.balls.length === 0) {
+            state.status = 'GAMEOVER';
+            document.getElementById('final-score').innerText = `SKORUN: ${state.score}`;
+            document.getElementById('game-over-screen').classList.remove('hidden');
+            saveProgress();
+        }
+
+        if(state.bricks.length > 0 && state.bricks.every(b => b.status === 0)) {
+            state.status = 'WIN';
+            state.level++;
+            document.getElementById('win-screen').classList.remove('hidden');
+            saveProgress();
+        }
+
+        document.getElementById('score').innerText = state.score;
+    }
+
+    function draw() {
+        ctx.fillStyle = '#050505';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        state.bricks.forEach(b => {
+            if(b.status === 1) {
+                ctx.fillStyle = b.color;
+                ctx.fillRect(b.x, b.y, b.w, b.h);
+                ctx.fillStyle = 'rgba(255,255,255,0.12)';
+                ctx.fillRect(b.x, b.y, b.w, 1.5);
+            }
+        });
+
+        ctx.fillStyle = state.paddle.color;
+        ctx.fillRect(state.paddle.x, state.paddle.y, state.paddle.w, state.paddle.h);
+
+        ctx.fillStyle = '#fff';
+        state.balls.forEach(b => {
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        state.powerUps.forEach(p => {
+            ctx.fillStyle = '#a855f7';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 11, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 9px Inter, Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('3X', p.x, p.y + 3.5);
+        });
+    }
+
+    function gameLoop() {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
+
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'continue') {
+        fetchWorld(false);
+    }
+
+    gameLoop();
+</script>
+</body>
+</html>

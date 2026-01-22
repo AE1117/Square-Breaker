@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayarlar - SQUARE BREAKER</title>
+    <style>
+        body {
+            margin: 0; background: #050505; color: #fff;
+            font-family: 'Inter', sans-serif; display: flex;
+            align-items: center; justify-content: center; height: 100vh;
+        }
+        .settings-card {
+            background: #0a0a0a; padding: 40px; border-radius: 24px;
+            width: 350px; border: 1px solid #222;
+        }
+        h2 { margin-top: 0; font-size: 1.5rem; color: #00f2ff; }
+        .field { margin-bottom: 15px; }
+        label { display: block; font-size: 0.7rem; color: #555; margin-bottom: 5px; text-transform: uppercase; }
+        input {
+            width: 100%; background: #000; border: 1px solid #222;
+            color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box;
+        }
+        .actions { margin-top: 30px; display: flex; gap: 10px; }
+        button { flex: 1; padding: 15px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-save { background: #fff; color: #000; }
+        .btn-back { background: #111; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="settings-card">
+        <h2>AYARLAR</h2>
+        <div id="settings-form">
+            <div class="field"><label>Sütun Sayısı</label><input type="number" name="cols"></div>
+            <div class="field"><label>Satır Sayısı</label><input type="number" name="rows"></div>
+            <div class="field"><label>Blok Boyutu</label><input type="number" name="brick_size"></div>
+            <div class="field"><label>Top Hızı</label><input type="number" name="ball_speed"></div>
+            <div class="field"><label>3X Şansı (0.0 - 1.0)</label><input type="number" step="0.1" name="drop_chance"></div>
+        </div>
+        <div class="actions">
+            <button class="btn-back" onclick="location.href='/'">GERİ</button>
+            <button class="btn-save" onclick="saveSettings()">KAYDET</button>
+        </div>
+    </div>
+
+    <script>
+        async function load() {
+            const res = await fetch('/get_settings');
+            const data = await res.json();
+            for(let key in data) {
+                const input = document.querySelector(`[name="${key}"]`);
+                if(input) input.value = data[key];
+            }
+        }
+        async function saveSettings() {
+            const inputs = document.querySelectorAll('input');
+            const data = {};
+            inputs.forEach(i => data[i.name] = i.type === 'number' ? parseFloat(i.value) : i.value);
+            await fetch('/save_settings', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            alert("Ayarlar Kaydedildi!");
+        }
+        load();
+    </script>
+</body>
+</html>
