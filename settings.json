@@ -1,0 +1,11 @@
+{
+    "cols": 35,
+    "rows": 40,
+    "brick_size": 11,
+    "ball_speed": 6,
+    "drop_chance": 0.02,
+    "brick_padding": 1,
+    "offset_top": 60,
+    "current_level": 1,
+    "current_score": 10
+}
