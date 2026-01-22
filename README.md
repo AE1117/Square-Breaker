@@ -11,6 +11,7 @@ but the level geometry is never trivial.
 ----------------------------------------
 
 # Overview
+
 The game consists of two main layers:
 
 1) Gameplay Layer (UI / Runtime)
@@ -56,7 +57,39 @@ This guarantees:
 - visual balance
 - predictable canvas size
 - performance stability
-<img width="538" height="880" alt="image" src="https://github.com/user-attachments/assets/fd7406a7-4488-40c6-82b2-df31e2e5a084" /><img width="536" height="885" alt="image" src="https://github.com/user-attachments/assets/e577d302-8c04-45f5-a151-e8fd8955f15f" />
+  
+<img width="538" height="880" alt="image" src="https://github.com/user-attachments/assets/fd7406a7-4488-40c6-82b2-df31e2e5a084" />
+
+# Guaranteed Main Corridor
+
+Every generated level includes:
+- One guaranteed main corridor
+- Orientation: horizontal
+- Position: randomized vertically
+- The corridor is:
+        + continuous
+        + never filled by smoothing
+        + protected from density operations
+
+This ensures:
+- navigability
+- visual readability
+- consistent gameplay flow
+
+<img width="536" height="885" alt="image" src="https://github.com/user-attachments/assets/e577d302-8c04-45f5-a151-e8fd8955f15f" />
+
+# Room and Shape Generation
+
+Rooms are generated using mixed shape logic:
+- Rectangular regions
+- Diamond-like regions
+- Organic “blob” regions
+
+Key properties:
+- Shapes may overlap
+- Shapes may touch walls
+- Shapes may be partially outside bounds (automatically clipped)
+Density is intentionally limited to avoid overfilling.
 
 <img width="535" height="884" alt="image" src="https://github.com/user-attachments/assets/39fe09f8-ac76-4169-a55c-135844906444" />
 
