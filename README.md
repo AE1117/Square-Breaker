@@ -32,6 +32,9 @@ The UI behaves exactly like a traditional brick breaker game:
 - Player controls a horizontal paddle
 - A ball bounces inside the canvas
 - Bricks are destroyed on collision
+- Some Boosts
+<img width="303" height="203" alt="image" src="https://github.com/user-attachments/assets/a4ac7e24-ba81-42c9-a770-6136866bf295" />
+
 
 The UI does not decide:
 - where bricks are placed
@@ -58,7 +61,7 @@ This guarantees:
 - predictable canvas size
 - performance stability
   
-<img width="538" height="880" alt="image" src="https://github.com/user-attachments/assets/fd7406a7-4488-40c6-82b2-df31e2e5a084" />
+<img width="520" height="886" alt="image" src="https://github.com/user-attachments/assets/fd71e1a5-e275-48e0-9de8-1d3077baaf49" />
 
 # Guaranteed Main Corridor
 
@@ -91,6 +94,67 @@ Key properties:
 - Shapes may be partially outside bounds (automatically clipped)
 Density is intentionally limited to avoid overfilling.
 
+# Bottom Wall System
+
+The bottom wall behaves as a post-generation constraint:
+- Wall thickness is probabilistic
+- Wall starts exactly where the generated shape ends
+- No wall is allowed to intrude upward into the playable area
+ -Thicker walls are rarer by design
+This creates variation without breaking gameplay balance.
+
 <img width="535" height="884" alt="image" src="https://github.com/user-attachments/assets/39fe09f8-ac76-4169-a55c-135844906444" />
 
+<img width="527" height="886" alt="image" src="https://github.com/user-attachments/assets/c8191d10-72de-45e6-9b2d-a7981804104f" />
+
+# Density Control and Smoothing
+
+To avoid noise and overfill:
+- A limited smoothing pass is applied
+- Corridor cells are explicitly protected
+- A global thinning pass randomly removes excess bricks
+- Density never approaches full solid fill
+
+Result:
+- readable negative space
+- fewer repetitive blobs
+- preserved paths
+
+# Determinism and Constraints
+
+The generator strictly respects:
+- User-defined map dimensions
+- Fixed input/output schema
+- No mutation of UI expectations
+
+This makes the system safe to:
+- reuse
+- cache
+- test
+- extend
+
+# Design Goals
+- Keep gameplay familiar
+- Make level geometry unpredictable but readable
+- Avoid “noise-only” randomness
+- Preserve symmetry without monotony
+- Allow future extensions:
+        + vertical corridors
+        + multi-corridor layouts
+        + special zones
+        + boss walls
+
+# Future Work
+
+Possible extensions without breaking the architecture:
+- Multiple main corridors
+- Vertical or L-shaped corridors
+- Dynamic difficulty scaling
+- Power-up-biased regions
+- Boss arenas using wall thickness logic
+
+# License
+
+This project is intended for experimentation, learning, and iteration.
+Use, modify, and extend freely.
 
