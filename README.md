@@ -63,10 +63,10 @@ This guarantees:
   
 <img width="520" height="886" alt="image" src="https://github.com/user-attachments/assets/fd71e1a5-e275-48e0-9de8-1d3077baaf49" />
 
-# Guaranteed Main Corridor
+# Main Corridor
 
 Every generated level includes:
-- One guaranteed main corridor
+- One main corridor
 - Orientation: horizontal
 - Position: randomized vertically
 - The corridor is:
